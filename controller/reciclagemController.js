@@ -1,9 +1,10 @@
 const mongoose = require('mongoose');
 const Reciclagem = require('../model/reciclagemModel');
 const Usuario = require('../model/usuarioModel');
-const UsuarioController = require('../controller/usuarioController');
+const Premio = require('../model/premioModel');
+const usuarioController = require ("../controller/usuarioController");
 
-const criar = async (item, imagem, peso, pontos, usuarioID) => {
+const criar = async (usuarioID, item, imagem, peso, pontos) => {
     let session;
     try {
         session = await mongoose.startSession();
@@ -20,7 +21,7 @@ const criar = async (item, imagem, peso, pontos, usuarioID) => {
             reciclagem = await reciclagem.save({session: session});
             usuario.reciclagem.push(reciclagem);
 
-            UsuarioController.usuario.atualizarPontos(usuario, reciclagem.pontos);
+            usuarioController.atualizarPontos(usuario, reciclagem.pontos);
 
             await usuario.save({session: session});
             await session.commitTransaction();
@@ -48,6 +49,37 @@ const visualizar = async (reciclagemID) => {
     }
 }
 
+const visualizarTodos = async (usuarioID) => {   
+    try{
+        const usuario = await Usuario.findById(usuarioID).exec();
+        const reciclagem = await Reciclagem.find({usuario: usuario});
+
+        return reciclagem;
+    }catch (error){
+        console.log(error);
+        console.log("Reciclagem não encontrada!!");
+    }
+}
+
+const visualizarPontosPeso = async () => {   
+    try{
+        const reciclagem = await Reciclagem.find().exec();
+
+        var pontos = 0;
+        var peso = 0;
+        for(var i = 0; i < reciclagem.length; i++){
+            pontos += reciclagem[i].pontos;
+            peso += reciclagem[i].peso;
+        }
+        const totais = [pontos, peso];
+        return totais;
+
+    }catch (error){
+        console.log(error);
+        console.log("Reciclagem não encontrada!!");
+    }
+}
+
 const atualizar = async (reciclagemID,item, imagem, peso, pontos) => {    
     let session;
     try{
@@ -58,6 +90,29 @@ const atualizar = async (reciclagemID,item, imagem, peso, pontos) => {
             const reciclagem = await Reciclagem.updateOne({_id: reciclagemID}, {$set: {item: item, imagem: imagem, peso: peso, pontos: pontos, data: new Date()}});
             await session.commitTransaction();
             return "reciclagem atualizada!";
+        }
+    }catch (error){
+        console.log(error);
+        session.abortTransaction();
+        console.log('Reciclagem não encontrada!!');
+    }finally{
+        if(session){
+            session.endSession();
+        }
+    }
+}
+
+const atualizarQuantidadePremio = async (premioID) => {    
+    let session;
+    try{
+        session = await mongoose.startSession();
+        session.startTransaction();
+        var premio = await Premio.findById(premioID).exec();
+        if(premio){
+            const quantidade = premio.quantidade - 1;
+            await Premio.updateOne({_id: premioID}, {$set: {quantidade: quantidade}});
+            await session.commitTransaction();
+            return quantidade;
         }
     }catch (error){
         console.log(error);
@@ -98,4 +153,4 @@ const deletar = async (reciclagemID) =>
     }
 }
 
-module.exports.reciclagem = {criar, deletar, visualizar, atualizar};
+module.exports = {criar, deletar, visualizar, visualizarTodos, visualizarPontosPeso ,atualizar,atualizarQuantidadePremio};

@@ -2,24 +2,19 @@ const mongoose = require('mongoose');
 const Premio = require('../model/premioModel');
 const Usuario = require('../model/usuarioModel');
 
-const criar = async (descricao, quantidade,usuarioID) => {
+const criar = async (descricao, quantidade, pontos) => {
     let session;
     try {
         session = await mongoose.startSession();
-        session.startTransaction();
-        const usuario = await Usuario.findById(usuarioID).exec();
-        if(usuario){      
-            let premio = new Premio({descricao: descricao, 
-                                        quantidade:quantidade,
-                                        pontos:usuario.pontos , 
-                                        usuario: usuario});
+        session.startTransaction();   
+        let premio = new Premio({descricao: descricao, 
+                                            quantidade:quantidade,
+                                            pontos:pontos});
 
-            premio = await premio.save({session: session});
-            await session.commitTransaction();
+         premio = await premio.save({session: session});
+        await session.commitTransaction();
 
-            return usuario.nome + premio;
-        }
-        
+        return  premio;     
     } catch (error) {
         console.log(error);
         session.abortTransaction();
@@ -41,14 +36,42 @@ const visualizar = async (premioID) => {
     }
 }
 
-const atualizar = async (premioID,descricao,quantidade,usuarioID) => {    
+const visualizarTodos = async () => {   
+    try{
+        const premio = await Premio.find().exec();
+
+        return premio;
+    }catch (error){
+        console.log(error);
+        console.log("Premio não encontrado!!");
+    }
+}
+
+const visualizarPontos = async (pontos) => {   
+    try{
+        const premio = await Premio.find().exec();
+        var premioPontos = [];
+        for (var i = 0; i < premio.length; i++){
+            console.log(premio[i].pontos , pontos)
+            if(premio[i].pontos == pontos){
+                premioPontos.push(premio[i]);
+            }
+        }
+
+        return premioPontos;
+    }catch (error){
+        console.log(error);
+        console.log("Premio não encontrado!!");
+    }
+}
+
+const atualizar = async (premioID,descricao,quantidade, pontos) => {    
     try{
         session = await mongoose.startSession();
         session.startTransaction();
         const premio = await Premio.findById(premioID).exec();
-        const usuario = await Usuario.findById(usuarioID).exec();
-        if (premio && usuario){
-            const premio = await Premio.updateOne({_id: premioID}, {$set: {descricao: descricao, quantidade: quantidade, pontos: usuario.pontos, usuario: usuario}});
+        if (premio){
+            const premio = await Premio.updateOne({_id: premioID}, {$set: {descricao: descricao, quantidade: quantidade, pontos: pontos}});
             await session.commitTransaction();
 
             return "Premio atualizado!";
@@ -86,4 +109,4 @@ const deletar = async (premioID) =>
     }
 }
 
-module.exports.premio = {criar, deletar, visualizar, atualizar};
+module.exports = {criar, deletar, visualizar, visualizarTodos, visualizarPontos, atualizar};

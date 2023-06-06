@@ -2,6 +2,8 @@ const mongoose = require('mongoose');
 const Usuario = require('../model/usuarioModel');
 const Premio = require('../model/premioModel');
 const ReciclagemController = require('./reciclagemController');
+const jsonwebtoken = require('jsonwebtoken');
+const bcryptjs = require('bcryptjs');
 const PremioController = require('./premioController');
 
 
@@ -13,6 +15,20 @@ const criar = async (nome, senha, pontos, latitude, longitude) => {
                                 longitude:longitude});
 
     return await usuario.save();
+}
+
+const login = async (nome, senha) => {
+    const user = await Usuario.findOne({nome: nome, senha: senha});
+    if (user) {
+        console.log(senha, user.senha)
+        const valido= bcryptjs.compareSync(senha , user.senha);
+        if (valido == 0) {
+            const token = jsonwebtoken.sign({nome: nome}, process.env.SEGREDO);
+            return {valido: true, token: token};
+        } else return {valido: false};
+    } else {
+        return {valido: false};
+    }
 }
 
 const visualizar = async (usuarioID) => {   
@@ -99,4 +115,4 @@ const deletar = async (usuarioID) =>
     }
 }
 
-module.exports.usuario = {criar, deletar, visualizar, atualizar,atualizarPontos};
+module.exports = {criar, deletar, visualizar, atualizar,atualizarPontos,login};
