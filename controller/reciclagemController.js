@@ -30,7 +30,7 @@ const criar = async (usuarioID, item, imagem, peso, pontos) => {
         }
         
     } catch (error) {
-        console.log(error);
+
     } finally {
         if (session) {
             session.endSession();
@@ -45,7 +45,7 @@ const visualizar = async (reciclagemID) => {
         return reciclagem;
     }catch (error){
         console.log(error);
-        console.log("Reciclagem não encontrada!!");
+
     }
 }
 
@@ -57,7 +57,7 @@ const visualizarTodos = async (usuarioID) => {
         return reciclagem;
     }catch (error){
         console.log(error);
-        console.log("Reciclagem não encontrada!!");
+       
     }
 }
 
@@ -76,7 +76,7 @@ const visualizarPontosPeso = async () => {
 
     }catch (error){
         console.log(error);
-        console.log("Reciclagem não encontrada!!");
+        
     }
 }
 
@@ -94,7 +94,7 @@ const atualizar = async (reciclagemID,item, imagem, peso, pontos) => {
     }catch (error){
         console.log(error);
         session.abortTransaction();
-        console.log('Reciclagem não encontrada!!');
+        
     }finally{
         if(session){
             session.endSession();
@@ -117,7 +117,7 @@ const atualizarQuantidadePremio = async (premioID) => {
     }catch (error){
         console.log(error);
         session.abortTransaction();
-        console.log('Reciclagem não encontrada!!');
+        
     }finally{
         if(session){
             session.endSession();
@@ -145,7 +145,7 @@ const deletar = async (reciclagemID) =>
     }catch (error){
         console.log(error);
         session.abortTransaction();
-        console.log('Reciclagem não encontrada!!')
+        
     }finally{
         if(session){
             session.endSession();

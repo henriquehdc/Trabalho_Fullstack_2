@@ -6,8 +6,7 @@ const usuarioSchema = mongoose.Schema({
         pontos: {type: Number, required: true},
         latitude: {type: String, required: true},
         longitude: {type: String, required: true},
-        reciclagem:[ {type: mongoose.Types.ObjectId, ref: "Reciclagem"} ]
-        
+        reciclagem:[ {type: mongoose.Types.ObjectId, ref: "Reciclagem"} ]      
 });
 
 const Usuario = mongoose.model('Usuario', usuarioSchema);

@@ -5,50 +5,74 @@ const ReciclagemController = require('./reciclagemController');
 const jsonwebtoken = require('jsonwebtoken');
 const bcryptjs = require('bcryptjs');
 const PremioController = require('./premioController');
+const NodeGeocoder = require('node-geocoder');
+const axios = require('axios');
 
 
-const criar = async (nome, senha, pontos, latitude, longitude) => {
+const criar = async (nome, senha) => {
+
+    const options = {
+        provider: 'openstreetmap'
+    };     
+
+    const geocoder = NodeGeocoder(options);    
+
+    const getCoordinates = async () => {
+        let latitude = 'Não informado';
+        let longitude = 'Não informado';
+
+        const response = await axios.get('http://ip-api.com/json');
+        const { lat, lon } = response.data;
+
+        const res = await geocoder.reverse({ lat, lon });
+        if (res.length > 0) {
+            latitude = lat;
+            longitude = lon;
+        };
+        return {latitude, longitude}
+    }  
+    const geo = await getCoordinates();
+
     const usuario = new Usuario({nome: nome, 
                                 senha:senha,
-                                pontos:pontos,
-                                latitude:latitude,
-                                longitude:longitude});
-
+                                pontos:0,
+                                latitude: geo.latitude,
+                                longitude: geo.longitude});
+    
     return await usuario.save();
 }
 
 const login = async (nome, senha) => {
     const user = await Usuario.findOne({nome: nome, senha: senha});
     if (user) {
-        console.log(senha, user.senha)
-        const valido= bcryptjs.compareSync(senha , user.senha);
-        if (valido == 0) {
-            const token = jsonwebtoken.sign({nome: nome}, process.env.SEGREDO);
-            return {valido: true, token: token};
-        } else return {valido: false};
+        if (senha === user.senha) {
+            return {user};
+        }else {
+            return null;
+        }
     } else {
-        return {valido: false};
+        return null;
     }
 }
 
 const visualizar = async (usuarioID) => {   
     try{
         const usuario = await Usuario.findById(usuarioID).exec();
-
+        
         return usuario;
     }catch (error){
-        console.log(error);
-        console.log("Usuario não encontrado!!");
+        return null;
     }
 }
 
-const atualizar = async (usuarioID,nome, senha, pontos, latitude, longitude) => {    
+const atualizar = async (usuarioID,nome, senha) => {    
     try{
         session = await mongoose.startSession();
         session.startTransaction();
         const usuario = await Usuario.findById(usuarioID).exec();
+        
         if (usuario){
-            await Usuario.updateOne({_id: usuarioID}, {$set: {nome: nome, senha: senha, pontos: pontos, latitude: latitude, longitude: longitude}});
+            await Usuario.updateOne({_id: usuarioID}, {$set: {nome: nome, senha: senha}});
             await session.commitTransaction();
  
             return usuario.nome + " atualizado!";
@@ -56,7 +80,7 @@ const atualizar = async (usuarioID,nome, senha, pontos, latitude, longitude) => 
     }catch (error){
         console.log(error);
         session.abortTransaction();
-        console.log('Usuario não encontrado!!');
+        
     }finally{
         if(session){
             session.endSession();
@@ -72,8 +96,7 @@ const atualizarPontos = async (usuario, pontos) => {
         usuario.pontos = usuario.pontos + pontos;        
         
         await session.commitTransaction();
-        console.log (usuario.nome +", Pontos atuais: " + usuario.pontos);
-        
+               
     }catch (error){
         console.log(error);
         session.abortTransaction();
@@ -107,7 +130,7 @@ const deletar = async (usuarioID) =>
         }
     }catch (error){
         console.log(error);
-        console.log('Usuario não encontrado!!')
+        
     }finally{
         if(session){
             session.endSession();

@@ -38,8 +38,7 @@ router.get('/reciclagem/premio/:id', async(req, res) => {
 
 router.post('/reciclagem/:id', async(req, res) =>{
     const novo = await reciclagemController.criar(req.params.id, req.body.item, req.body.imagem, req.body.peso, req.body.pontos);
-    console.log(novo);
-    res.json({resultado: 'Reciclagem Cadastrada!!!', reciclagem: novo});
+        res.json({resultado: 'Reciclagem Cadastrada!!!', reciclagem: novo});
 });
 
 module.exports = router;

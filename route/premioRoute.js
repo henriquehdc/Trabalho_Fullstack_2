@@ -33,21 +33,30 @@ router.get('/premio/disponivel/:pontos', async(req, res) => {
 });
 
 router.post('/premio', async(req, res) =>{
-    const novo = await premioController.criar(req.body.descricao, req.body.quantidade,req.body.pontos);
-    res.json({resultado: 'Premio Cadastrado!!!', premio: novo});
+    const premio = await premioController.criar(req.body.descricao, req.body.quantidade,req.body.pontos);
+    if (premio) {
+        res.json({status: 200 , premio: premio});
+    } else res.json({status: 400 , premio: premio});
+});
+
+router.post('/premio/:premioID/usuario/:usuarioID', async(req, res) =>{
+    const novo = await premioController.atribuirPremio(req.params.premioID, req.params.usuarioID);
+    if (novo) {
+        res.json({status: novo});
+    } else res.json({status: 400});
 });
 
 router.put('/premio/:id', async(req, res) =>{
     const att = await premioController.atualizar(req.params.id, req.body.descricao, req.body.pontos, req.body.quantidade);
-    res.json({resultado: 'Premio atualizado!!!', premio: att});
+    res.json({status: att});
 });
 
 router.delete('/premio/:id', async(req, res) => {
     const premio = await premioController.deletar(req.params.id);
     if(premio){
-        res.json({resultado: 'Premio deletado!!!', premio: premio});
+        res.json({status: 200, premio: premio});
     } else{
-        res.status(404).json({ resultado: 'ERRO!! Premio não deletado!' });
+        res.status(404).json({ status: 400 });
     }
 });
 
